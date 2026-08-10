@@ -1,6 +1,7 @@
 import requests
 import re
 import os
+import json
 
 api_key = 'sk_live_1x7jN6OUqTIzUNEv7MIM9Er2h5GphCXer9ef4BUx'
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
@@ -69,26 +70,21 @@ def get_country_flag(number):
     return "🌐"
 
 def mask_number(number):
-    # আপনার স্ক্রিনশটের মতো নম্বর মাস্কিং (যেমন: 88019****684 বা 26378****753)
     if len(number) > 8:
         return number[:5] + "****" + number[-3:]
     return number
 
 def get_service_info(item, message_text):
     detected_name = ""
-    
-    # প্যানেলের বিভিন্ন ফিল্ড চেক করা এবং 'A2P' থাকলে তা বাদ দিয়ে আসল সার্ভিস নাম বের করা
     for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
         if key in item and item[key]:
             val = str(item[key]).strip()
             if val and val.lower() != "none":
-                # যদি নামটির সাথে 'A2P' যুক্ত থাকে, তবে সেটা পরিষ্কার করে ফেলা
                 val = val.replace("A2P", "").replace("a2p", "").strip()
                 if val:
                     detected_name = val
                     break
                     
-    # যদি উপরে না পাওয়া যায়, পুরো আইটেমের ভেতর খোঁজা
     if not detected_name:
         for key, value in item.items():
             if value and isinstance(value, str):
@@ -102,7 +98,6 @@ def get_service_info(item, message_text):
                 if detected_name:
                     break
 
-    # তাও না পেলে মেসেজ টেক্সট থেকে ডিটেক্ট করা
     if not detected_name or detected_name.lower() == "none":
         text_upper = message_text.upper()
         if "TELEGRAM" in text_upper:
@@ -116,7 +111,6 @@ def get_service_info(item, message_text):
         else:
             detected_name = "Service"
 
-    # সার্ভিস অনুযায়ী সঠিক ইমোজি সেট করা (আপনার স্ক্রিনশটের মতো হুবহু)
     s_upper = detected_name.upper()
     if "TELEGRAM" in s_upper:
         emoji = "✈️"
@@ -131,12 +125,26 @@ def get_service_info(item, message_text):
         
     return detected_name, emoji
 
-def send_telegram_message(text):
+def send_telegram_message(text, emoji, otp_code):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    
+    # ইনলাইন বাটনে স্ক্রিনশটের মতো ইমোজি + ক্লিপবোর্ড + কোড সেট করা হলো
+    inline_keyboard = {
+        "inline_keyboard": [
+            [
+                {
+                    "text": f"{emoji} 📋 {otp_code}",
+                    "copy_text": {"text": otp_code}
+                }
+            ]
+        ]
+    }
+    
     payload = {
         "chat_id": CHAT_ID,
         "text": text,
-        "parse_mode": "Markdown"
+        "parse_mode": "Markdown",
+        "reply_markup": json.dumps(inline_keyboard)
     }
     try:
         requests.post(tg_url, json=payload)
@@ -166,22 +174,20 @@ def check_messages():
                 masked_num = mask_number(raw_number)
                 prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
-                # আপনার স্ক্রিনশটের মতো ওটিপি বা কোড রিড করার রেজেক্স
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
-                # আপনার স্ক্রিনশটের নিখুঁত আউটপুট ফরম্যাট
+                # আপনার স্ক্রিনশটের মতো উপরে প্রিফিক্স এবং কি (🔑 OTP) সহ ফরম্যাট রাখা হলো
                 formatted_msg = (
                     f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
-                    f"🔑 OTP : `{otp_code}`\n\n"
-                    f"{service_emoji} 📋 `{otp_code}`"
+                    f"🔑 OTP : `{otp_code}`"
                 )
                 
-                send_telegram_message(formatted_msg)
+                send_telegram_message(formatted_msg, service_emoji, otp_code)
                 save_last_processed_id(msg_id)
-                print("OTP sent with perfect format!")
+                print("OTP sent successfully with exact button layout!")
             else:
                 print("No new messages.")
         else:
@@ -192,3 +198,4 @@ def check_messages():
 
 if __name__ == "__main__":
     check_messages()
+    
