@@ -122,14 +122,16 @@ def check_messages():
                 raw_number = str(latest_item.get("number", ""))
                 msg_body = latest_item.get("message", "")
                 
+                # OTP কোড নিখুঁতভাবে রিড করার জন্য
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
                 service_name, service_emoji = get_service_details(msg_body)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
-                prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
+                prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
+                # আপনার ২ নম্বর ছবির হুবহু ডিজাইন (কোড ব্লক এবং নিচে কপি ফরম্যাট)
                 formatted_msg = (
                     f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
@@ -137,9 +139,10 @@ def check_messages():
                     f"🔑 OTP : `{otp_code}`\n\n"
                     f"{service_emoji} 📋 `{otp_code}`"
                 )
+                
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent with all countries flag support!")
+                print("New OTP sent successfully with exact format!")
             else:
                 print("No new messages.")
         else:
@@ -150,3 +153,4 @@ def check_messages():
 
 if __name__ == "__main__":
     check_messages()
+        
