@@ -73,26 +73,24 @@ def mask_number(number):
         return number[:5] + "****" + number[-3:]
     return number
 
-def detect_service(message_text):
+def get_service_details(message_text):
     text_upper = message_text.upper()
-    if "WHATSAPP BUSINESS" in text_upper:
-        return "WhatsApp Business"
-    elif "WHATSAPP" in text_upper:
-        return "WhatsApp"
-    elif "1XBET" in text_upper:
-        return "1xbet"
+    if "WHATSAPP" in text_upper:
+        return "WhatsApp", "💬"
     elif "TELEGRAM" in text_upper:
-        return "Telegram"
+        return "Telegram", "✈️"
+    elif "1XBET" in text_upper:
+        return "1xbet", "🎰"
     elif "GOOGLE" in text_upper:
-        return "Google"
+        return "Google", "🌐"
     elif "FACEBOOK" in text_upper or "FB" in text_upper:
-        return "Facebook"
+        return "Facebook", "👥"
     elif "IMO" in text_upper:
-        return "Imo"
+        return "Imo", "📱"
     elif "VIBER" in text_upper:
-        return "Viber"
+        return "Viber", "💜"
     else:
-        return "Service"
+        return "Service", "💬"
 
 def send_telegram_message(text):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -127,22 +125,21 @@ def check_messages():
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
+                service_name, service_emoji = get_service_details(msg_body)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
-                service = detect_service(msg_body)
                 prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
                 
-                # আপনার ছবির মতো নিখুঁত কোড ব্লক ও ফরম্যাট
                 formatted_msg = (
-                    f"💬 {service} {flag} `{masked_num}`\n\n"
+                    f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"💬 📋 `{otp_code}`"
+                    f"{service_emoji} 📋 `{otp_code}`"
                 )
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent with exact image format!")
+                print("New OTP sent with all countries flag support!")
             else:
                 print("No new messages.")
         else:
