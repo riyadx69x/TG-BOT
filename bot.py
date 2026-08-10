@@ -57,7 +57,6 @@ def check_messages():
         "Accept": "application/json"
     }
     
-    # আজকের ডেট বা আপনার প্রয়োজনমতো ডেট দিতে পারেন
     params = {
         "per_page": 5,
         "page": 1
@@ -73,14 +72,14 @@ def check_messages():
                 number = item.get("number", "")
                 msg_body = item.get("message", "")
                 
-                # মেসেজ থেকে ওটিপি কোড খুঁজে বের করা (যদি থাকে)
+                # মেসেজ থেকে ওটিপি কোড খুঁজে বের করা
                 otp_match = re.search(r'\b\d{3}[- ]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
                 flag_country = get_country_flag(number)
                 service_name = detect_service(item.get("source", "") + " " + msg_body)
                 
-                # স্ক্রিনশটের স্টাইলে ফরম্যাট করা
+                # ফরম্যাট করা মেসেজ (সঠিক ব্যাকস্ল্যাশ বা সিনট্যাক্স সহ)
                 formatted_msg = (
                     f"{service_name} {flag_country} `{number}`\n\n"
                     f"`{msg_body}`\n\n"
