@@ -71,15 +71,16 @@ def send_telegram_message(text):
 
 def check_messages():
     try:
-        params = {'per_page': 5}
+        params = {'per_page': 10}
         response = requests.get(url, headers=headers, params=params)
         result = response.json()
         
-        if result.get("success") == True:
+        # প্যানেল থেকে সফল রেসপন্স আসলে
+        if result.get("success") == True or isinstance(result.get("data"), list):
             messages = result.get("data", [])
             
             if messages:
-                # প্যানেলের সবচেয়ে লেটেস্ট মেসেজটি সবার উপরে থাকে
+                # লেটেস্ট মেসেজটি নিয়ে কাজ করা
                 latest_item = messages[0]
                 msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
                 
@@ -89,6 +90,7 @@ def check_messages():
                     raw_number = str(latest_item.get("number", ""))
                     msg_body = latest_item.get("message", "")
                     
+                    # ওটিপি বা কনফার্মেশন কোড খুঁজে বের করার রেগুলার এক্সপ্রেশন
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                     otp_code = otp_match.group(0) if otp_match else "N/A"
                     
@@ -97,6 +99,7 @@ def check_messages():
                     service = detect_service(msg_body)
                     prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
                     
+                    # আপনার স্ক্রিনশটের হুবহু স্টাইল
                     formatted_msg = (
                         f"💬 {service} {flag} `{masked_num}`\n\n"
                         f"> {msg_body}\n\n"
@@ -106,13 +109,13 @@ def check_messages():
                     )
                     send_telegram_message(formatted_msg)
                     save_last_processed_id(msg_id)
-                    print("New OTP sent to Telegram!")
+                    print("New OTP sent to Telegram in exact requested format!")
                 else:
                     print("No new messages.")
             else:
-                print("No messages found.")
+                print("Message list is empty.")
         else:
-            print("API returned success: false.")
+            print("API response error or success: false.")
             
     except Exception as e:
         print(f"API Error: {e}")
