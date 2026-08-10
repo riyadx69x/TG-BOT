@@ -75,10 +75,12 @@ def mask_number(number):
 
 def get_service_details(message_text):
     text_upper = message_text.upper()
-    if "WHATSAPP" in text_upper:
-        return "WhatsApp", "💬"
-    elif "TELEGRAM" in text_upper:
+    
+    # আরও নিখুঁতভাবে সব কিওয়ার্ড চেক করা হচ্ছে
+    if "TELEGRAM" in text_upper:
         return "Telegram", "✈️"
+    elif "WHATSAPP" in text_upper:
+        return "WhatsApp", "💬"
     elif "1XBET" in text_upper:
         return "1xbet", "🎰"
     elif "GOOGLE" in text_upper:
@@ -89,6 +91,12 @@ def get_service_details(message_text):
         return "Imo", "📱"
     elif "VIBER" in text_upper:
         return "Viber", "💜"
+    elif "INSTAGRAM" in text_upper or "IG" in text_upper:
+        return "Instagram", "📸"
+    elif "TIKTOK" in text_upper:
+        return "TikTok", "🎵"
+    elif "NETFLIX" in text_upper:
+        return "Netflix", "🎬"
     else:
         return "Service", "💬"
 
@@ -122,7 +130,6 @@ def check_messages():
                 raw_number = str(latest_item.get("number", ""))
                 msg_body = latest_item.get("message", "")
                 
-                # OTP কোড নিখুঁতভাবে রিড করার জন্য
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
@@ -131,7 +138,7 @@ def check_messages():
                 masked_num = mask_number(raw_number)
                 prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
-                # আপনার ২ নম্বর ছবির হুবহু ডিজাইন (কোড ব্লক এবং নিচে কপি ফরম্যাট)
+                # আপনার ছবির মতো নিখুঁত ডিজাইন (কোড ব্লক ও নিচে কপি ফরম্যাট)
                 formatted_msg = (
                     f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
@@ -142,7 +149,7 @@ def check_messages():
                 
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent successfully with exact format!")
+                print("New OTP sent successfully with correct service detection!")
             else:
                 print("No new messages.")
         else:
@@ -153,4 +160,3 @@ def check_messages():
 
 if __name__ == "__main__":
     check_messages()
-        
