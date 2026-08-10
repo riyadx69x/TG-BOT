@@ -75,47 +75,40 @@ def check_messages():
         response = requests.get(url, headers=headers, params=params)
         result = response.json()
         
-        # প্যানেল থেকে সফল রেসপন্স আসলে
-        if result.get("success") == True or isinstance(result.get("data"), list):
-            messages = result.get("data", [])
+        messages = result.get("data", [])
+        
+        if messages:
+            latest_item = messages[0]
+            msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
             
-            if messages:
-                # লেটেস্ট মেসেজটি নিয়ে কাজ করা
-                latest_item = messages[0]
-                msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
+            last_saved_id = get_last_processed_id()
+            
+            if msg_id != last_saved_id:
+                raw_number = str(latest_item.get("number", ""))
+                msg_body = latest_item.get("message", "")
                 
-                last_saved_id = get_last_processed_id()
+                otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
+                otp_code = otp_match.group(0) if otp_match else "N/A"
                 
-                if msg_id != last_saved_id:
-                    raw_number = str(latest_item.get("number", ""))
-                    msg_body = latest_item.get("message", "")
-                    
-                    # ওটিপি বা কনফার্মেশন কোড খুঁজে বের করার রেগুলার এক্সপ্রেশন
-                    otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
-                    otp_code = otp_match.group(0) if otp_match else "N/A"
-                    
-                    flag = get_country_flag(raw_number)
-                    masked_num = mask_number(raw_number)
-                    service = detect_service(msg_body)
-                    prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
-                    
-                    # আপনার স্ক্রিনশটের হুবহু স্টাইল
-                    formatted_msg = (
-                        f"💬 {service} {flag} `{masked_num}`\n\n"
-                        f"> {msg_body}\n\n"
-                        f"🔍 Prefix : `+{prefix}`\n"
-                        f"🔑 OTP : `{otp_code}`\n\n"
-                        f"`💬 📋 {otp_code}`"
-                    )
-                    send_telegram_message(formatted_msg)
-                    save_last_processed_id(msg_id)
-                    print("New OTP sent to Telegram in exact requested format!")
-                else:
-                    print("No new messages.")
+                flag = get_country_flag(raw_number)
+                masked_num = mask_number(raw_number)
+                service = detect_service(msg_body)
+                prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
+                
+                formatted_msg = (
+                    f"💬 {service} {flag} `{masked_num}`\n\n"
+                    f"> {msg_body}\n\n"
+                    f"🔍 Prefix : `+{prefix}`\n"
+                    f"🔑 OTP : `{otp_code}`\n\n"
+                    f"`💬 📋 {otp_code}`"
+                )
+                send_telegram_message(formatted_msg)
+                save_last_processed_id(msg_id)
+                print("New OTP sent to Telegram!")
             else:
-                print("Message list is empty.")
+                print("No new messages.")
         else:
-            print("API response error or success: false.")
+            print("No messages available in panel.")
             
     except Exception as e:
         print(f"API Error: {e}")
