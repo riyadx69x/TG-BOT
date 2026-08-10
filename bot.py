@@ -73,32 +73,28 @@ def mask_number(number):
         return number[:5] + "****" + number[-3:]
     return number
 
-def get_service_details(message_text):
-    text_upper = message_text.upper()
-    
-    # আরও নিখুঁতভাবে সব কিওয়ার্ড চেক করা হচ্ছে
-    if "TELEGRAM" in text_upper:
-        return "Telegram", "✈️"
-    elif "WHATSAPP" in text_upper:
-        return "WhatsApp", "💬"
-    elif "1XBET" in text_upper:
-        return "1xbet", "🎰"
-    elif "GOOGLE" in text_upper:
-        return "Google", "🌐"
-    elif "FACEBOOK" in text_upper or "FB" in text_upper:
-        return "Facebook", "👥"
-    elif "IMO" in text_upper:
-        return "Imo", "📱"
-    elif "VIBER" in text_upper:
-        return "Viber", "💜"
-    elif "INSTAGRAM" in text_upper or "IG" in text_upper:
-        return "Instagram", "📸"
-    elif "TIKTOK" in text_upper:
-        return "TikTok", "🎵"
-    elif "NETFLIX" in text_upper:
-        return "Netflix", "🎬"
+def get_service_emoji(service_name):
+    s_upper = service_name.upper()
+    if "TELEGRAM" in s_upper:
+        return "✈️"
+    elif "WHATSAPP" in s_upper:
+        return "💬"
+    elif "1XBET" in s_upper:
+        return "🎰"
+    elif "GOOGLE" in s_upper:
+        return "🌐"
+    elif "FACEBOOK" in s_upper or "FB" in s_upper:
+        return "👥"
+    elif "IMO" in s_upper:
+        return "📱"
+    elif "VIBER" in s_upper:
+        return "💜"
+    elif "INSTAGRAM" in s_upper:
+        return "📸"
+    elif "TIKTOK" in s_upper:
+        return "🎵"
     else:
-        return "Service", "💬"
+        return "💬"
 
 def send_telegram_message(text):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -130,26 +126,33 @@ def check_messages():
                 raw_number = str(latest_item.get("number", ""))
                 msg_body = latest_item.get("message", "")
                 
-                otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
-                otp_code = otp_match.group(0) if otp_match else "N/A"
+                # প্যানেল থেকে সরাসরি সার্ভিস বা অ্যাপের নাম ফেচ করা (যেমন: 1xBet, Telegram ইত্যাদি)
+                service_name = latest_item.get("service", latest_item.get("app", "Service"))
+                if not service_name or service_name == "":
+                    service_name = "Service"
                 
-                service_name, service_emoji = get_service_details(msg_body)
+                service_emoji = get_service_emoji(service_name)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
                 prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
-                # আপনার ছবির মতো নিখুঁত ডিজাইন (কোড ব্লক ও নিচে কপি ফরম্যাট)
+                # OTP কোড ডিটেক্ট করা
+                otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
+                otp_code = otp_match.group(0) if otp_match else "N/A"
+                
+                # আপনার কাঙ্ক্ষিত ফরম্যাট
                 formatted_msg = (
                     f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"{service_emoji} 📋 `{otp_code}`"
+                    f"{service_emoji}
+                    📋 `{otp_code}`"
                 )
                 
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent successfully with correct service detection!")
+                print("New OTP sent with direct panel service name!")
             else:
                 print("No new messages.")
         else:
