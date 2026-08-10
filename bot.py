@@ -146,8 +146,7 @@ def check_messages():
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"{service_emoji}
-                    📋 `{otp_code}`"
+                    f"{service_emoji} 📋 `{otp_code}`"
                 )
                 
                 send_telegram_message(formatted_msg)
