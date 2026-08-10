@@ -1,3 +1,6 @@
+হা হা, ভাই একদম ঠিক ধরেছেন! এবার বুঝলাম প্যানেলের ডাটাতে সার্ভিস নেমের সাথে যে ছোট লাল ট্যাগটা থাকে ওটাই আসল ভেজাল করছিল। আপনার দেওয়া স্ক্রিনশটগুলোতে পরিষ্কার দেখা যাচ্ছে— প্রথম ছবিটিতে যেমন লেখা ছিল 1xBet A2P, এই কারণে আগের কোডগুলো ঘাবড়ে গিয়ে সার্ভিস নামটা ঠিকমতো ধরতে পারছিল না।
+আপনার শেষ স্ক্রিনশটগুলোর (Telegram এবং WhatsApp ওয়ালা ডিজাইন) সাথে হুবহু মিল রেখে, প্যানেলের যেকোনো ডাটা (সেখানে A2P বা অন্য কিছু যাই থাকুক না কেন) থেকে একদম নিখুঁতভাবে সার্ভিস নেম, সঠিক কান্ট্রি ফ্ল্যাগ, মাস্কড নম্বর এবং টেলিগ্রামের ওই সুন্দর লুকটি এনে কোডটি আপডেট করে দিয়েছি।
+নিচে একদম ফ্রেশ এবং ফুল কোডটি দিয়ে দিলাম, এটা সরাসরি কপি করে টার্মাকে বসিয়ে দিন:
 import requests
 import re
 import os
@@ -69,27 +72,40 @@ def get_country_flag(number):
     return "🌐"
 
 def mask_number(number):
-    if len(number) > 7:
-        return number[:4] + "****" + number[-3:]
+    # আপনার স্ক্রিনশটের মতো নম্বর মাস্কিং (যেমন: 88019****684 বা 26378****753)
+    if len(number) > 8:
+        return number[:5] + "****" + number[-3:]
     return number
 
 def get_service_info(item, message_text):
     detected_name = ""
-    for key, value in item.items():
-        if value and isinstance(value, str):
-            val_lower = value.lower()
-            if any(app in val_lower for app in ["telegram", "whatsapp", "1xbet", "google", "facebook", "imo", "viber"]):
-                detected_name = value
-                break
-                
-    if not detected_name:
-        for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
-            if key in item and item[key]:
-                val = str(item[key]).strip()
-                if val and val.lower() != "none":
+    
+    # প্যানেলের বিভিন্ন ফিল্ড চেক করা এবং 'A2P' থাকলে তা বাদ দিয়ে আসল সার্ভিস নাম বের করা
+    for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
+        if key in item and item[key]:
+            val = str(item[key]).strip()
+            if val and val.lower() != "none":
+                # যদি নামটির সাথে 'A2P' যুক্ত থাকে, তবে সেটা পরিষ্কার করে ফেলা
+                val = val.replace("A2P", "").replace("a2p", "").strip()
+                if val:
                     detected_name = val
                     break
                     
+    # যদি উপরে না পাওয়া যায়, পুরো আইটেমের ভেতর খোঁজা
+    if not detected_name:
+        for key, value in item.items():
+            if value and isinstance(value, str):
+                val_lower = value.lower()
+                for app in ["telegram", "whatsapp", "1xbet", "google", "facebook", "imo", "viber"]:
+                    if app in val_lower:
+                        detected_name = app.capitalize()
+                        if app == "1xbet":
+                            detected_name = "1xBet"
+                        break
+                if detected_name:
+                    break
+
+    # তাও না পেলে মেসেজ টেক্সট থেকে ডিটেক্ট করা
     if not detected_name or detected_name.lower() == "none":
         text_upper = message_text.upper()
         if "TELEGRAM" in text_upper:
@@ -98,9 +114,12 @@ def get_service_info(item, message_text):
             detected_name = "WhatsApp"
         elif "1XBET" in text_upper:
             detected_name = "1xBet"
+        elif "GOOGLE" in text_upper:
+            detected_name = "Google"
         else:
             detected_name = "Service"
 
+    # সার্ভিস অনুযায়ী সঠিক ইমোজি সেট করা (আপনার স্ক্রিনশটের মতো হুবহু)
     s_upper = detected_name.upper()
     if "TELEGRAM" in s_upper:
         emoji = "✈️"
@@ -150,20 +169,22 @@ def check_messages():
                 masked_num = mask_number(raw_number)
                 prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
+                # আপনার স্ক্রিনশটের মতো ওটিপি বা কোড রিড করার রেজেক্স
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
+                # আপনার স্ক্রিনশটের নিখুঁত আউটপুট ফরম্যাট
                 formatted_msg = (
-                    f"💬 {flag} {masked_num}\n\n"
+                    f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"💬 📋 `{otp_code}`"
+                    f"{service_emoji} 📋 `{otp_code}`"
                 )
                 
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("OTP sent with exact format!")
+                print("OTP sent with perfect format!")
             else:
                 print("No new messages.")
         else:
@@ -174,3 +195,4 @@ def check_messages():
 
 if __name__ == "__main__":
     check_messages()
+
