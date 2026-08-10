@@ -50,20 +50,15 @@ def send_telegram_message(text):
         print(f"Telegram Error: {e}")
 
 def check_messages():
-    """প্যানেল থেকে মেসেজ হিস্ট্রি ফেচ করে স্ক্রিনশটের মতো সাজিয়ে পাঠানোর ফাংশশন"""
+    """প্যানেল থেকে মেসেজ ফেচ করে স্ক্রিনশটের স্টাইলে পাঠানোর ফাংশশন"""
     url = f"{BASE_URL}/messages"
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Accept": "application/json"
     }
     
-    params = {
-        "per_page": 5,
-        "page": 1
-    }
-    
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers)
         result = response.json()
         
         if result.get("success"):
@@ -79,7 +74,7 @@ def check_messages():
                 flag_country = get_country_flag(number)
                 service_name = detect_service(item.get("source", "") + " " + msg_body)
                 
-                # ফরম্যাট করা মেসেজ (সঠিক ব্যাকস্ল্যাশ বা সিনট্যাক্স সহ)
+                # স্ক্রিনশটের স্টাইলে ফরম্যাট করা মেসেজ
                 formatted_msg = (
                     f"{service_name} {flag_country} `{number}`\n\n"
                     f"`{msg_body}`\n\n"
@@ -88,7 +83,7 @@ def check_messages():
                 )
                 
                 send_telegram_message(formatted_msg)
-            print("Messages processed and sent to Telegram successfully!")
+            print("Checked messages successfully!")
         else:
             print("API Error or No Data Found")
             
