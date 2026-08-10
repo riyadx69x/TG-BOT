@@ -132,16 +132,17 @@ def check_messages():
                 service = detect_service(msg_body)
                 prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
                 
+                # আপনার ছবির মতো নিখুঁত কোড ব্লক ও ফরম্যাট
                 formatted_msg = (
                     f"💬 {service} {flag} `{masked_num}`\n\n"
-                    f"> {msg_body}\n\n"
+                    f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"`💬 📋 {otp_code}`"
+                    f"💬 📋 `{otp_code}`"
                 )
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent with exact auto-detected service format!")
+                print("New OTP sent with exact image format!")
             else:
                 print("No new messages.")
         else:
