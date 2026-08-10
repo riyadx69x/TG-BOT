@@ -70,31 +70,50 @@ def get_country_flag(number):
 
 def mask_number(number):
     if len(number) > 7:
-        return number[:5] + "****" + number[-3:]
+        return number[:4] + "****" + number[-3:]
     return number
 
-def get_service_emoji(service_name):
-    s_upper = service_name.upper()
+def get_service_info(item, message_text):
+    detected_name = ""
+    for key, value in item.items():
+        if value and isinstance(value, str):
+            val_lower = value.lower()
+            if any(app in val_lower for app in ["telegram", "whatsapp", "1xbet", "google", "facebook", "imo", "viber"]):
+                detected_name = value
+                break
+                
+    if not detected_name:
+        for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
+            if key in item and item[key]:
+                val = str(item[key]).strip()
+                if val and val.lower() != "none":
+                    detected_name = val
+                    break
+                    
+    if not detected_name or detected_name.lower() == "none":
+        text_upper = message_text.upper()
+        if "TELEGRAM" in text_upper:
+            detected_name = "Telegram"
+        elif "WHATSAPP" in text_upper:
+            detected_name = "WhatsApp"
+        elif "1XBET" in text_upper:
+            detected_name = "1xBet"
+        else:
+            detected_name = "Service"
+
+    s_upper = detected_name.upper()
     if "TELEGRAM" in s_upper:
-        return "✈️"
+        emoji = "✈️"
     elif "WHATSAPP" in s_upper:
-        return "💬"
+        emoji = "💬"
     elif "1XBET" in s_upper:
-        return "🎰"
+        emoji = "🎰"
     elif "GOOGLE" in s_upper:
-        return "🌐"
-    elif "FACEBOOK" in s_upper or "FB" in s_upper:
-        return "👥"
-    elif "IMO" in s_upper:
-        return "📱"
-    elif "VIBER" in s_upper:
-        return "💜"
-    elif "INSTAGRAM" in s_upper:
-        return "📸"
-    elif "TIKTOK" in s_upper:
-        return "🎵"
+        emoji = "🌐"
     else:
-        return "💬"
+        emoji = "💬"
+        
+    return detected_name, emoji
 
 def send_telegram_message(text):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -110,7 +129,7 @@ def send_telegram_message(text):
 
 def check_messages():
     try:
-        params = {'per_page': 10}
+        params = {'per_page': 5}
         response = requests.get(url, headers=headers, params=params)
         result = response.json()
         
@@ -126,36 +145,29 @@ def check_messages():
                 raw_number = str(latest_item.get("number", ""))
                 msg_body = latest_item.get("message", "")
                 
-                # প্যানেল থেকে সরাসরি সার্ভিস বা অ্যাপের নাম ফেচ করা (যেমন: 1xBet, Telegram ইত্যাদি)
-                service_name = latest_item.get("service", latest_item.get("app", "Service"))
-                if not service_name or service_name == "":
-                    service_name = "Service"
-                
-                service_emoji = get_service_emoji(service_name)
+                service_name, service_emoji = get_service_info(latest_item, msg_body)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
                 prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
-                # OTP কোড ডিটেক্ট করা
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
-                # আপনার কাঙ্ক্ষিত ফরম্যাট
                 formatted_msg = (
-                    f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
+                    f"💬 {flag} {masked_num}\n\n"
                     f"```{msg_body}```\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
-                    f"{service_emoji} 📋 `{otp_code}`"
+                    f"💬 📋 `{otp_code}`"
                 )
                 
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent with direct panel service name!")
+                print("OTP sent with exact format!")
             else:
                 print("No new messages.")
         else:
-            print("No messages available in panel.")
+            print("No messages available.")
             
     except Exception as e:
         print(f"API Error: {e}")
