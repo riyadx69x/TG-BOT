@@ -26,7 +26,6 @@ def save_last_processed_id(msg_id):
         f.write(str(msg_id))
 
 def get_country_flag(number):
-    # বড় থেকে ছোট ডিজিটের প্রিফিক্সগুলো আগে চেক করা হচ্ছে যেন ভুল না হয়
     country_flags = {
         "93": "🇦🇫", "355": "🇦🇱", "213": "🇩🇿", "376": "🇦🇩", "244": "🇦🇴",
         "54": "🇦🇷", "374": "🇦🇲", "61": "🇦🇺", "43": "🇦🇹", "994": "🇦🇿",
@@ -55,7 +54,7 @@ def get_country_flag(number):
         "595": "🇵🇾", "51": "🇵🇪", "63": "🇵🇭", "48": "🇵🇱", "351": "🇵🇹",
         "974": "🇶🇦", "40": "🇷🇴", "7": "🇷🇺", "250": "🇷🇼", "966": "🇸🇦",
         "221": "🇸🇳", "381": "🇷🇸", "248": "🇸🇨", "232": "🇸🇱", "65": "🇸🇬",
-        "421": "🇸🇰", "386": "🇸🇮", "252": "索", "27": "🇿🇦", "82": "🇰🇷",
+        "421": "🇸🇰", "386": "🇸🇮", "252": "🇸🇴", "27": "🇿🇦", "82": "🇰🇷",
         "34": "🇪🇸", "94": "🇱🇰", "249": "🇸🇩", "597": "🇸🇷", "46": "🇸🇪",
         "41": "🇨🇭", "963": "🇸🇾", "886": "🇹🇼", "992": "🇹🇯", "255": "🇹🇿",
         "66": "🇹🇭", "228": "🇹🇬", "676": "🇹🇴", "216": "🇹🇳", "90": "🇹🇷",
@@ -77,23 +76,23 @@ def mask_number(number):
 def detect_service(message_text):
     text_upper = message_text.upper()
     if "WHATSAPP BUSINESS" in text_upper:
-        return "💬 WhatsApp Business"
+        return "WhatsApp Business"
     elif "WHATSAPP" in text_upper:
-        return "💬 WhatsApp"
+        return "WhatsApp"
     elif "1XBET" in text_upper:
-        return "🎲 1xBet"
+        return "1xbet"
     elif "TELEGRAM" in text_upper:
-        return "✈️ Telegram"
+        return "Telegram"
     elif "GOOGLE" in text_upper:
-        return "🔍 Google"
+        return "Google"
     elif "FACEBOOK" in text_upper or "FB" in text_upper:
-        return "📘 Facebook"
+        return "Facebook"
     elif "IMO" in text_upper:
-        return "📱 Imo"
+        return "Imo"
     elif "VIBER" in text_upper:
-        return "💜 Viber"
+        return "Viber"
     else:
-        return "💬 Service"
+        return "Service"
 
 def send_telegram_message(text):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -134,7 +133,7 @@ def check_messages():
                 prefix = raw_number[:4] if len(raw_number) >= 4 else raw_number
                 
                 formatted_msg = (
-                    f"{service} {flag} `{masked_num}`\n\n"
+                    f"💬 {service} {flag} `{masked_num}`\n\n"
                     f"> {msg_body}\n\n"
                     f"🔍 Prefix : `+{prefix}`\n"
                     f"🔑 OTP : `{otp_code}`\n\n"
@@ -142,7 +141,7 @@ def check_messages():
                 )
                 send_telegram_message(formatted_msg)
                 save_last_processed_id(msg_id)
-                print("New OTP sent with all countries flag support!")
+                print("New OTP sent with exact auto-detected service format!")
             else:
                 print("No new messages.")
         else:
