@@ -2,15 +2,17 @@ import requests
 import re
 import os
 import json
+import time
 
-api_key = 'sk_live_1x7jN6OUqTIzUNEv7MIM9Er2h5GphCXer9ef4BUx'
+# নতুন প্যানেলের ক্রেডেনশিয়ালস
+api_token = 'RVJXQkZBUzRek2JEgHNoZUqUmYhnZ1NiXU55ZHtnc35zboBJWJBydw=='
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
 CHAT_ID = "-1003178872820"
 
-url = 'https://redxsms.com/api/v1/iprn/messages'
+url = 'http://147.135.212.197/crapi/st/viewstats'
 
 headers = {
-    'Authorization': f'Bearer {api_key}',
+    'Authorization': f'Bearer {api_token}',
     'Accept': 'application/json'
 }
 
@@ -128,7 +130,6 @@ def get_service_info(item, message_text):
 def send_telegram_message(text, emoji, otp_code):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     
-    # ইনলাইন বাটনে স্ক্রিনশটের মতো ইমোজি + ক্লিপবোর্ড + কোড সেট করা হলো
     inline_keyboard = {
         "inline_keyboard": [
             [
@@ -147,37 +148,39 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        requests.post(tg_url, json=payload)
+        requests.post(tg_url, json=payload, timeout=3)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
 def check_messages():
     try:
-        params = {'per_page': 5}
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, timeout=3)
         result = response.json()
         
-        messages = result.get("data", [])
+        messages = []
+        if isinstance(result, list):
+            messages = result
+        elif isinstance(result, dict):
+            messages = result.get("data", result.get("messages", []))
         
         if messages:
             latest_item = messages[0]
-            msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
+            msg_id = str(latest_item.get("id", latest_item.get("received_at", latest_item.get("time", ""))))
             
             last_saved_id = get_last_processed_id()
             
             if msg_id != last_saved_id:
-                raw_number = str(latest_item.get("number", ""))
-                msg_body = latest_item.get("message", "")
+                raw_number = str(latest_item.get("number", latest_item.get("phone", "")))
+                msg_body = latest_item.get("message", latest_item.get("text", ""))
                 
                 service_name, service_emoji = get_service_info(latest_item, msg_body)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
-                prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
+                prefix = raw_number[:5] if len(raw_number >= 5) else raw_number
                 
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
                 
-                # আপনার স্ক্রিনশটের মতো উপরে প্রিফিক্স এবং কি (🔑 OTP) সহ ফরম্যাট রাখা হলো
                 formatted_msg = (
                     f"{service_emoji} {service_name} {flag} `{masked_num}`\n\n"
                     f"```{msg_body}```\n\n"
@@ -187,15 +190,13 @@ def check_messages():
                 
                 send_telegram_message(formatted_msg, service_emoji, otp_code)
                 save_last_processed_id(msg_id)
-                print("OTP sent successfully with exact button layout!")
-            else:
-                print("No new messages.")
-        else:
-            print("No messages available.")
+                print("Instant OTP sent successfully!")
             
     except Exception as e:
         print(f"API Error: {e}")
 
 if __name__ == "__main__":
-    check_messages()
-    
+    print("Bot is running in lightning-fast mode...")
+    while True:
+        check_messages()
+        time.sleep(1) # প্রতি ১ সেকেন্ড পর পর চেক করবে, কোনো ডিলে ছাড়াই!
