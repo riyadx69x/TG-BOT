@@ -4,15 +4,15 @@ import os
 import json
 import time
 
-# প্যানেলের ক্রেডেনশিয়ালস
-api_token = 'RVJXQkZBUzRek2JEgHNoZUqUmYhnZ1NiXU55ZHtnc35zboBJWJBydw=='
+# তোর দেওয়া অরিজিনাল ও আসল API এবং ক্রেডেনশিয়ালস
+api_key = 'sk_live_1x7jN6OUqTIzUNEv7MIM9Er2h5GphCXer9ef4BUx'
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
 CHAT_ID = "-1003178872820"
 
-url = 'http://147.135.212.197/crapi/st/viewstats'
+url = 'https://redxsms.com/api/v1/iprn/messages'
 
 headers = {
-    'Authorization': f'Bearer {api_token}',
+    'Authorization': f'Bearer {api_key}',
     'Accept': 'application/json'
 }
 
@@ -154,29 +154,25 @@ def send_telegram_message(text, emoji, otp_code):
 
 def check_messages():
     try:
-        response = requests.get(url, headers=headers, timeout=3)
+        params = {'per_page': 5}
+        response = requests.get(url, headers=headers, params=params, timeout=3)
         
-        # চেক করা হচ্ছে রেসপন্স ঠিকঠাক JSON ফরম্যাটে আসছে কি না
         try:
             result = response.json()
         except:
-            return  # জেসন না আসলে স্কিপ করবে, এরর দেখাবে না
+            return
         
-        messages = []
-        if isinstance(result, list):
-            messages = result
-        elif isinstance(result, dict):
-            messages = result.get("data", result.get("messages", []))
+        messages = result.get("data", [])
         
         if messages:
             latest_item = messages[0]
-            msg_id = str(latest_item.get("id", latest_item.get("received_at", latest_item.get("time", ""))))
+            msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
             
             last_saved_id = get_last_processed_id()
             
             if msg_id != last_saved_id:
-                raw_number = str(latest_item.get("number", latest_item.get("phone", "")))
-                msg_body = latest_item.get("message", latest_item.get("text", ""))
+                raw_number = str(latest_item.get("number", ""))
+                msg_body = latest_item.get("message", "")
                 
                 service_name, service_emoji = get_service_info(latest_item, msg_body)
                 flag = get_country_flag(raw_number)
@@ -201,7 +197,7 @@ def check_messages():
         pass
 
 if __name__ == "__main__":
-    print("Bot is running smoothly...")
+    print("Bot is running with correct RedxSMS API...")
     while True:
         check_messages()
         time.sleep(1)
