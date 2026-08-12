@@ -4,7 +4,6 @@ import os
 import json
 import time
 
-# তোর দেওয়া অরিজিনাল ও আসল API এবং ক্রেডেনশিয়ালস
 api_key = 'sk_live_1x7jN6OUqTIzUNEv7MIM9Er2h5GphCXer9ef4BUx'
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
 CHAT_ID = "-1003178872820"
@@ -148,14 +147,14 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        requests.post(tg_url, json=payload, timeout=3)
+        requests.post(tg_url, json=payload, timeout=2)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
 def check_messages():
     try:
-        params = {'per_page': 5}
-        response = requests.get(url, headers=headers, params=params, timeout=3)
+        params = {'per_page': 1}
+        response = requests.get(url, headers=headers, params=params, timeout=2)
         
         try:
             result = response.json()
@@ -191,13 +190,13 @@ def check_messages():
                 
                 send_telegram_message(formatted_msg, service_emoji, otp_code)
                 save_last_processed_id(msg_id)
-                print("Instant OTP sent successfully!")
+                print("Instant OTP pushed!")
             
     except Exception as e:
         pass
 
 if __name__ == "__main__":
-    print("Bot is running with correct RedxSMS API...")
+    print("Turbo mode activated...")
     while True:
         check_messages()
-        time.sleep(1)
+        time.sleep(0.5)
