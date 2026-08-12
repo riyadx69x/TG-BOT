@@ -4,7 +4,7 @@ import os
 import json
 import time
 
-# নতুন প্যানেলের ক্রেডেনশিয়ালস
+# প্যানেলের ক্রেডেনশিয়ালস
 api_token = 'RVJXQkZBUzRek2JEgHNoZUqUmYhnZ1NiXU55ZHtnc35zboBJWJBydw=='
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
 CHAT_ID = "-1003178872820"
@@ -155,7 +155,12 @@ def send_telegram_message(text, emoji, otp_code):
 def check_messages():
     try:
         response = requests.get(url, headers=headers, timeout=3)
-        result = response.json()
+        
+        # চেক করা হচ্ছে রেসপন্স ঠিকঠাক JSON ফরম্যাটে আসছে কি না
+        try:
+            result = response.json()
+        except:
+            return  # জেসন না আসলে স্কিপ করবে, এরর দেখাবে না
         
         messages = []
         if isinstance(result, list):
@@ -176,7 +181,7 @@ def check_messages():
                 service_name, service_emoji = get_service_info(latest_item, msg_body)
                 flag = get_country_flag(raw_number)
                 masked_num = mask_number(raw_number)
-                prefix = raw_number[:5] if len(raw_number >= 5) else raw_number
+                prefix = raw_number[:5] if len(raw_number) >= 5 else raw_number
                 
                 otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                 otp_code = otp_match.group(0) if otp_match else "N/A"
@@ -193,10 +198,10 @@ def check_messages():
                 print("Instant OTP sent successfully!")
             
     except Exception as e:
-        print(f"API Error: {e}")
+        pass
 
 if __name__ == "__main__":
-    print("Bot is running in lightning-fast mode...")
+    print("Bot is running smoothly...")
     while True:
         check_messages()
-        time.sleep(1) # প্রতি ১ সেকেন্ড পর পর চেক করবে, কোনো ডিলে ছাড়াই!
+        time.sleep(1)
