@@ -110,7 +110,7 @@ def send_telegram_message(text, emoji, otp_code):
                     "copy_text": {"text": otp_code}
                 },
                 {
-                    "text": "🌐 Number Bot ↗",
+                    "text": " Number Bot ",
                     "url": "https://t.me/Worldfast_otpxbot"
                 }
             ]
