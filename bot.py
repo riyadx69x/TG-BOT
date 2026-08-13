@@ -27,7 +27,7 @@ def get_country_code_and_flag(number):
         "855": ("KH", "🇰🇭"), "237": ("CM", "🇨🇲"), "1": ("US", "🇺🇸"), "238": ("CV", "🇨🇻"), "236": ("CF", "🇨🇫"),
         "235": ("TD", "🇹🇩"), "56": ("CL", "🇨🇱"), "86": ("CN", "🇨🇳"), "57": ("CO", "🇨🇴"), "269": ("KM", "🇰🇲"),
         "242": ("CG", "🇨🇬"), "243": ("CD", "🇨🇩"), "506": ("CR", "🇨🇷"), "385": ("HR", "🇭🇷"), "53": ("CU", "🇨🇺"),
-        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇨🇲"),
+        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇩🇲"),
         "1809": ("DO", "🇩🇴"), "593": ("EC", "🇪🇨"), "20": ("EG", "🇪🇬"), "503": ("SV", "🇸🇻"), "240": ("GQ", "🇬🇶"),
         "291": ("ER", "🇪🇷"), "372": ("EE", "🇪🇪"), "251": ("ET", "🇪🇹"), "679": ("FJ", "🇫🇯"), "358": ("FI", "🇫🇮"),
         "33": ("FR", "🇫🇷"), "241": ("GA", "🇬🇦"), "220": ("GM", "🇬🇲"), "995": ("GE", "🇬🇪"), "49": ("DE", "🇩🇪"),
@@ -36,7 +36,7 @@ def get_country_code_and_flag(number):
         "91": ("IN", "🇮🇳"), "62": ("ID", "🇮🇩"), "98": ("IR", "🇮🇷"), "964": ("IQ", "🇮🇶"), "353": ("IE", "🇮🇪"),
         "972": ("IL", "🇮🇱"), "39": ("IT", "🇮🇹"), "1876": ("JM", "🇯🇲"), "81": ("JP", "🇯🇵"), "962": ("JO", "🇯🇴"),
         "7": ("KZ", "🇰🇿"), "254": ("KE", "🇰🇪"), "965": ("KW", "🇰🇼"), "996": ("KG", "🇰🇬"), "856": ("LA", "🇱🇦"),
-        "371": ("LV", "🇱🇻"), "961": ("LB", "🇱🇧"), "266": ("LS", "🇱🇸"), "231": ("LR", "🇱🇷"), "218": ("LY", "🇱🇾"),
+        "371": ("LV", "🇱🇻"), "961": ("LB", "LB"), "266": ("LS", "🇱🇸"), "231": ("LR", "🇱🇷"), "218": ("LY", "🇱🇾"),
         "423": ("LI", "🇱🇮"), "370": ("LT", "🇱🇹"), "352": ("LU", "🇱🇺"), "261": ("MG", "🇲🇬"), "265": ("MW", "🇲🇼"),
         "60": ("MY", "🇲🇾"), "960": ("MV", "🇲🇻"), "223": ("ML", "🇲🇱"), "356": ("MT", "🇲🇹"), "52": ("MX", "🇲🇽"),
         "373": ("MD", "🇲🇩"), "377": ("MC", "🇲🇨"), "976": ("MN", "🇲🇳"), "382": ("ME", "🇲🇪"), "212": ("MA", "🇲🇦"),
@@ -57,26 +57,42 @@ def get_country_code_and_flag(number):
     
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
-            return prefix_code, country_data[prefix_code][0], country_data[prefix_code][1]
-    return "", "GEN", "🌐"
+            return country_data[prefix_code]
+    return "GEN", "🌐"
 
 def mask_number_middle(number):
-    # কান্ট্রি কোড বের করে নেওয়া
     matched_prefix = ""
-    for prefix_code in sorted(get_country_code_and_flag.__globals__.get('country_data', {}).keys(), key=len, reverse=True):
+    country_data = {
+        "93": "AF", "355": "AL", "213": "DZ", "376": "AD", "244": "AO", "54": "AR", "374": "AM", "61": "AU", "43": "AT", "994": "AZ",
+        "973": "BH", "880": "BD", "375": "BY", "32": "BE", "501": "BZ", "229": "BJ", "975": "BT", "591": "BO", "387": "BA", "267": "BW",
+        "55": "BR", "673": "BN", "359": "BG", "226": "BF", "257": "BI", "855": "KH", "237": "CM", "1": "US", "238": "CV", "236": "CF",
+        "235": "TD", "56": "CL", "86": "CN", "57": "CO", "269": "KM", "242": "CG", "243": "CD", "506": "CR", "385": "HR", "53": "CU",
+        "357": "CY", "420": "CZ", "45": "DK", "253": "DJ", "1767": "DM", "1809": "DO", "593": "EC", "20": "EG", "503": "SV", "240": "GQ",
+        "291": "ER", "372": "EE", "251": "ET", "679": "FJ", "358": "FI", "33": "FR", "241": "GA", "220": "GM", "995": "GE", "49": "DE",
+        "233": "GH", "30": "GR", "502": "GT", "224": "GN", "245": "GW", "592": "GY", "509": "HT", "504": "HN", "36": "HU", "354": "IS",
+        "91": "IN", "62": "ID", "98": "IR", "964": "IQ", "353": "IE", "972": "IL", "39": "IT", "1876": "JM", "81": "JP", "962": "JO",
+        "7": "KZ", "254": "KE", "965": "KW", "996": "KG", "856": "LA", "371": "LV", "961": "LB", "266": "LS", "231": "LR", "218": "LY",
+        "423": "LI", "370": "LT", "352": "LU", "261": "MG", "265": "MW", "60": "MY", "960": "MV", "223": "ML", "356": "MT", "52": "MX",
+        "373": "MD", "377": "MC", "976": "MN", "382": "ME", "212": "MA", "258": "MZ", "95": "MM", "264": "NA", "977": "NP", "31": "NL",
+        "64": "NZ", "505": "NI", "227": "NE", "234": "NG", "47": "NO", "968": "OM", "92": "PK", "970": "PS", "507": "PA", "675": "PG",
+        "595": "PY", "51": "PE", "63": "PH", "48": "PL", "351": "PT", "974": "QA", "40": "RO", "250": "RW", "966": "SA", "221": "SN",
+        "381": "RS", "248": "SC", "232": "SL", "65": "SG", "421": "SK", "386": "SI", "252": "SO", "27": "ZA", "82": "KR", "34": "ES",
+        "94": "LK", "249": "SD", "597": "SR", "46": "SE", "41": "CH", "963": "SY", "886": "TW", "992": "TJ", "255": "TZ", "66": "TH",
+        "228": "TG", "676": "TO", "216": "TN", "90": "TR", "993": "TM", "256": "UG", "380": "UA", "971": "AE", "44": "GB", "598": "UY",
+        "998": "UZ", "58": "VE", "84": "VN", "967": "YE", "260": "ZM", "263": "ZW"
+    }
+    
+    for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
             matched_prefix = prefix_code
             break
-    
+            
     if not matched_prefix:
         matched_prefix = number[:3] if len(number) >= 3 else number
 
-    # কান্ট্রি কোড এবং শেষের ৫টি ডিজিট বাদ দিয়ে মাঝখানের অংশে ***** বসানো
     remaining_part = number[len(matched_prefix):]
     if len(remaining_part) > 5:
-        masked_middle = '*****'
-        last_five = remaining_part[-5:]
-        return matched_prefix + masked_middle + last_five
+        return matched_prefix + '*****' + remaining_part[-5:]
     return number
 
 def get_service_info(item, message_text):
@@ -165,6 +181,7 @@ def send_telegram_message(text, emoji, otp_code):
     except Exception as e:
         print(f"Telegram Error: {e}")
 
+# পুরোনো মেসেজগুলো পুনরায় পাওয়ার জন্য ফাইল রিসেট করা হলো
 if os.path.exists(LAST_ID_FILE):
     os.remove(LAST_ID_FILE)
 
@@ -199,7 +216,7 @@ def check_messages():
                     msg_body = latest_item.get("message", "")
                     
                     service_name, service_emoji = get_service_info(latest_item, msg_body)
-                    _, country_code, flag = get_country_code_and_flag(raw_number)
+                    country_code, flag = get_country_code_and_flag(raw_number)
                     prefix = raw_number[:9] if len(raw_number) >= 9 else raw_number
                     
                     masked_number = mask_number_middle(raw_number)
@@ -226,7 +243,7 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running with middle masked numbers...")
+    print("Bot is running and syncing all old & new messages...")
     while True:
         check_messages()
         time.sleep(3)
