@@ -17,18 +17,7 @@ headers = {
 
 LAST_ID_FILE = "last_id.txt"
 
-def get_last_processed_id():
-    if os.path.exists(LAST_ID_FILE):
-        with open(LAST_ID_FILE, "r") as f:
-            return f.read().strip()
-    return None
-
-def save_last_processed_id(msg_id):
-    with open(LAST_ID_FILE, "w") as f:
-        f.write(str(msg_id))
-
 def mask_number(number):
-    # শেষ ৫টি অক্ষর বা ডিজিট রেখে বাকিগুলোর জায়গায় স্টার (*) বসাবে
     if len(number) > 5:
         return '*' * (len(number) - 5) + number[-5:]
     return number
@@ -43,7 +32,7 @@ def get_country_code_and_flag(number):
         "855": ("KH", "🇰🇭"), "237": ("CM", "🇨🇲"), "1": ("US", "🇺🇸"), "238": ("CV", "🇨🇻"), "236": ("CF", "🇨🇫"),
         "235": ("TD", "🇹🇩"), "56": ("CL", "🇨🇱"), "86": ("CN", "🇨🇳"), "57": ("CO", "🇨🇴"), "269": ("KM", "🇰🇲"),
         "242": ("CG", "🇨🇬"), "243": ("CD", "🇨🇩"), "506": ("CR", "🇨🇷"), "385": ("HR", "🇭🇷"), "53": ("CU", "🇨🇺"),
-        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇨🇲"),
+        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇩🇲"),
         "1809": ("DO", "🇩🇴"), "593": ("EC", "🇪🇨"), "20": ("EG", "🇪🇬"), "503": ("SV", "🇸🇻"), "240": ("GQ", "🇬🇶"),
         "291": ("ER", "🇪🇷"), "372": ("EE", "🇪🇪"), "251": ("ET", "🇪🇹"), "679": ("FJ", "🇫🇯"), "358": ("FI", "🇫🇮"),
         "33": ("FR", "🇫🇷"), "241": ("GA", "🇬🇦"), "220": ("GM", "🇬🇲"), "995": ("GE", "🇬🇪"), "49": ("DE", "🇩🇪"),
@@ -117,10 +106,10 @@ def get_service_info(item, message_text):
     
     if "TELEGRAM" in s_upper:
         short_name = "TG"
-        emoji = "📱"
+        emoji = "✈️"
     elif "WHATSAPP" in s_upper:
         short_name = "Ws"
-        emoji = "💬"
+        emoji = "🟢"
     elif "1XBET" in s_upper:
         short_name = "1xBet"
         emoji = "🎰"
@@ -129,7 +118,7 @@ def get_service_info(item, message_text):
         emoji = "🌐"
     else:
         short_name = detected_name
-        emoji = "♻️"
+        emoji = "💬"
         
     return short_name, emoji
 
@@ -140,7 +129,7 @@ def send_telegram_message(text, emoji, otp_code):
         "inline_keyboard": [
             [
                 {
-                    "text": f"{emoji}  {otp_code}",
+                    "text": f"{emoji} 📋 {otp_code}",
                     "copy_text": {"text": otp_code}
                 },
                 {
@@ -158,14 +147,18 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        response = requests.post(tg_url, json=payload, timeout=3)
+        requests.post(tg_url, json=payload, timeout=3)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
+# প্রথমবার চালুর সময় পুরোনো সব মেসেজ পাঠানোর জন্য ট্র্যাকিং ফাইলটি নিশ্চিত ফাঁকা রাখা হলো
+if os.path.exists(LAST_ID_FILE):
+    os.remove(LAST_ID_FILE)
+
 def check_messages():
     try:
-        params = {'per_page': 50}
-        response = requests.get(url, headers=headers, params=params, timeout=4)
+        params = {'per_page': 100}
+        response = requests.get(url, headers=headers, params=params, timeout=5)
         
         if response.status_code != 200:
             return
@@ -174,14 +167,22 @@ def check_messages():
         messages = result.get("data", [])
         
         if messages:
+            # প্যানেলের পুরোনো মেসেজগুলো আগে পাঠানোর জন্য রিভার্স করা হলো
             messages.reverse()
-            last_saved_id = get_last_processed_id()
-            new_last_id = last_saved_id
             
+            sent_ids = set()
+            if os.path.exists("sent_messages.json"):
+                with open("sent_messages.json", "r") as f:
+                    try:
+                        sent_ids = set(json.load(f))
+                    except:
+                        sent_ids = set()
+
+            new_sent = False
             for latest_item in messages:
                 msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
                 
-                if last_saved_id is None or msg_id != last_saved_id:
+                if msg_id not in sent_ids:
                     raw_number = str(latest_item.get("number", ""))
                     msg_body = latest_item.get("message", "")
                     
@@ -189,7 +190,6 @@ def check_messages():
                     country_code, flag = get_country_code_and_flag(raw_number)
                     prefix = raw_number[:9] if len(raw_number) >= 9 else raw_number
                     
-                    # নাম্বার মাস্কিং করা (শেষ ৫টি ডিজিট রেখে বাকি অংশ * করা)
                     masked_number = mask_number(raw_number)
                     
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
@@ -202,20 +202,19 @@ def check_messages():
                     )
                     
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
-                    new_last_id = msg_id
-                    time.sleep(0.4)
+                    sent_ids.add(msg_id)
+                    new_sent = True
+                    time.sleep(0.3)
             
-            if new_last_id and new_last_id != last_saved_id:
-                save_last_processed_id(new_last_id)
+            if new_sent:
+                with open("sent_messages.json", "w") as f:
+                    json.dump(list(sent_ids), f)
             
     except Exception as e:
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running with masked numbers...")
-    if os.path.exists(LAST_ID_FILE):
-        os.remove(LAST_ID_FILE)
-        
+    print("Bot is running and syncing all old & new messages...")
     while True:
         check_messages()
-        time.sleep(2)
+        time.sleep(3)
