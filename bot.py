@@ -27,7 +27,7 @@ def get_country_code_and_flag(number):
         "855": ("KH", "🇰🇭"), "237": ("CM", "🇨🇲"), "1": ("US", "🇺🇸"), "238": ("CV", "🇨🇻"), "236": ("CF", "🇨🇫"),
         "235": ("TD", "🇹🇩"), "56": ("CL", "🇨🇱"), "86": ("CN", "🇨🇳"), "57": ("CO", "🇨🇴"), "269": ("KM", "🇰🇲"),
         "242": ("CG", "🇨🇬"), "243": ("CD", "🇨🇩"), "506": ("CR", "🇨🇷"), "385": ("HR", "🇭🇷"), "53": ("CU", "🇨🇺"),
-        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇩🇲"),
+        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇨🇲"),
         "1809": ("DO", "🇩🇴"), "593": ("EC", "🇪🇨"), "20": ("EG", "🇪🇬"), "503": ("SV", "🇸🇻"), "240": ("GQ", "🇬🇶"),
         "291": ("ER", "🇪🇷"), "372": ("EE", "🇪🇪"), "251": ("ET", "🇪🇹"), "679": ("FJ", "🇫🇯"), "358": ("FI", "🇫🇮"),
         "33": ("FR", "🇫🇷"), "241": ("GA", "🇬🇦"), "220": ("GM", "🇬🇲"), "995": ("GE", "🇬🇪"), "49": ("DE", "🇩🇪"),
@@ -36,7 +36,7 @@ def get_country_code_and_flag(number):
         "91": ("IN", "🇮🇳"), "62": ("ID", "🇮🇩"), "98": ("IR", "🇮🇷"), "964": ("IQ", "🇮🇶"), "353": ("IE", "🇮🇪"),
         "972": ("IL", "🇮🇱"), "39": ("IT", "🇮🇹"), "1876": ("JM", "🇯🇲"), "81": ("JP", "🇯🇵"), "962": ("JO", "🇯🇴"),
         "7": ("KZ", "🇰🇿"), "254": ("KE", "🇰🇪"), "965": ("KW", "🇰🇼"), "996": ("KG", "🇰🇬"), "856": ("LA", "🇱🇦"),
-        "371": ("LV", "🇱🇻"), "961": ("LB", "LB"), "266": ("LS", "🇱🇸"), "231": ("LR", "🇱🇷"), "218": ("LY", "🇱🇾"),
+        "371": ("LV", "🇱🇻"), "961": ("LB", "🇱🇧"), "266": ("LS", "🇱🇸"), "231": ("LR", "🇱🇷"), "218": ("LY", "🇱🇾"),
         "423": ("LI", "🇱🇮"), "370": ("LT", "🇱🇹"), "352": ("LU", "🇱🇺"), "261": ("MG", "🇲🇬"), "265": ("MW", "🇲🇼"),
         "60": ("MY", "🇲🇾"), "960": ("MV", "🇲🇻"), "223": ("ML", "🇲🇱"), "356": ("MT", "🇲🇹"), "52": ("MX", "🇲🇽"),
         "373": ("MD", "🇲🇩"), "377": ("MC", "🇲🇨"), "976": ("MN", "🇲🇳"), "382": ("ME", "🇲🇪"), "212": ("MA", "🇲🇦"),
@@ -136,10 +136,10 @@ def get_service_info(item, message_text):
     
     if "TELEGRAM" in s_upper:
         short_name = "TG"
-        emoji = "✈️"
+        emoji = "📱"
     elif "WHATSAPP" in s_upper:
         short_name = "Ws"
-        emoji = "🟢"
+        emoji = "💬"
     elif "1XBET" in s_upper:
         short_name = "1xBet"
         emoji = "🎰"
@@ -148,7 +148,7 @@ def get_service_info(item, message_text):
         emoji = "🌐"
     else:
         short_name = detected_name
-        emoji = "💬"
+        emoji = "♻️"
         
     return short_name, emoji
 
@@ -159,7 +159,7 @@ def send_telegram_message(text, emoji, otp_code):
         "inline_keyboard": [
             [
                 {
-                    "text": f"{emoji} 📋 {otp_code}",
+                    "text": f"{emoji}  {otp_code}",
                     "copy_text": {"text": otp_code}
                 },
                 {
@@ -177,11 +177,56 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        requests.post(tg_url, json=payload, timeout=3)
+        response = requests.post(tg_url, json=payload, timeout=3)
+        res_data = response.json()
+        if res_data.get("ok"):
+            message_id = res_data["result"]["message_id"]
+            # মেসেজ পাঠানোর পর ফাইল বা লিস্টে সেভ করে রাখা যাতে ৫ মিনিট পর ডিলিট করা যায়
+            save_message_for_deletion(message_id)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
-# পুরোনো মেসেজগুলো পুনরায় পাওয়ার জন্য ফাইল রিসেট করা হলো
+DELETION_FILE = "pending_deletions.json"
+
+def save_message_for_deletion(message_id):
+    current_time = time.time()
+    data = []
+    if os.path.exists(DELETION_FILE):
+        try:
+            with open(DELETION_FILE, "r") as f:
+                data = json.load(f)
+        except:
+            data = []
+    # ৫ মিনিট = ৩০০ সেকেন্ড পর ডিলিট হওয়ার সময় নির্ধারণ
+    data.append({"message_id": message_id, "delete_at": current_time + 300})
+    with open(DELETION_FILE, "w") as f:
+        json.dump(data, f)
+
+def check_pending_deletions():
+    if not os.path.exists(DELETION_FILE):
+        return
+    try:
+        with open(DELETION_FILE, "r") as f:
+            data = json.load(f)
+    except:
+        return
+    
+    current_time = time.time()
+    remaining = []
+    for item in data:
+        if current_time >= item["delete_at"]:
+            # টেলিগ্রাম থেকে মেসেজ ডিলিট করার রিকোয়েস্ট পাঠানো
+            del_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteMessage"
+            try:
+                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=3)
+            except Exception as e:
+                print(f"Delete Error: {e}")
+        else:
+            remaining.append(item)
+            
+    with open(DELETION_FILE, "w") as f:
+        json.dump(remaining, f)
+
 if os.path.exists(LAST_ID_FILE):
     os.remove(LAST_ID_FILE)
 
@@ -243,7 +288,8 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running and syncing all old & new messages...")
+    print("Bot is running with 5 minutes auto-delete feature...")
     while True:
         check_messages()
+        check_pending_deletions()
         time.sleep(3)
