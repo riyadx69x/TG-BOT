@@ -27,6 +27,12 @@ def save_last_processed_id(msg_id):
     with open(LAST_ID_FILE, "w") as f:
         f.write(str(msg_id))
 
+def mask_number(number):
+    # শেষ ৫টি অক্ষর বা ডিজিট রেখে বাকিগুলোর জায়গায় স্টার (*) বসাবে
+    if len(number) > 5:
+        return '*' * (len(number) - 5) + number[-5:]
+    return number
+
 def get_country_code_and_flag(number):
     country_data = {
         "93": ("AF", "🇦🇫"), "355": ("AL", "🇦🇱"), "213": ("DZ", "🇩🇿"), "376": ("AD", "🇦🇩"), "244": ("AO", "🇦🇴"),
@@ -37,7 +43,7 @@ def get_country_code_and_flag(number):
         "855": ("KH", "🇰🇭"), "237": ("CM", "🇨🇲"), "1": ("US", "🇺🇸"), "238": ("CV", "🇨🇻"), "236": ("CF", "🇨🇫"),
         "235": ("TD", "🇹🇩"), "56": ("CL", "🇨🇱"), "86": ("CN", "🇨🇳"), "57": ("CO", "🇨🇴"), "269": ("KM", "🇰🇲"),
         "242": ("CG", "🇨🇬"), "243": ("CD", "🇨🇩"), "506": ("CR", "🇨🇷"), "385": ("HR", "🇭🇷"), "53": ("CU", "🇨🇺"),
-        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇩🇲"),
+        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇨🇲"),
         "1809": ("DO", "🇩🇴"), "593": ("EC", "🇪🇨"), "20": ("EG", "🇪🇬"), "503": ("SV", "🇸🇻"), "240": ("GQ", "🇬🇶"),
         "291": ("ER", "🇪🇷"), "372": ("EE", "🇪🇪"), "251": ("ET", "🇪🇹"), "679": ("FJ", "🇫🇯"), "358": ("FI", "🇫🇮"),
         "33": ("FR", "🇫🇷"), "241": ("GA", "🇬🇦"), "220": ("GM", "🇬🇲"), "995": ("GE", "🇬🇪"), "49": ("DE", "🇩🇪"),
@@ -111,10 +117,10 @@ def get_service_info(item, message_text):
     
     if "TELEGRAM" in s_upper:
         short_name = "TG"
-        emoji = "✈️"
+        emoji = "📱"
     elif "WHATSAPP" in s_upper:
         short_name = "Ws"
-        emoji = "🟢"
+        emoji = "💬"
     elif "1XBET" in s_upper:
         short_name = "1xBet"
         emoji = "🎰"
@@ -139,7 +145,7 @@ def send_telegram_message(text, emoji, otp_code):
                 },
                 {
                     "text": "🌐 Number Bot",
-                    "url": "https://t.me/YourBotUsername"  # এখানে তোমার বটের লিংক বসিয়ে নেবে
+                    "url": "https://t.me/YourBotUsername"
                 }
             ]
         ]
@@ -152,35 +158,30 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        requests.post(tg_url, json=payload, timeout=2)
+        response = requests.post(tg_url, json=payload, timeout=3)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
 def check_messages():
     try:
-        # প্যানেল থেকে একাধিক (যেমন একসাথে ১০টি) মেসেজ ফেচ করার ব্যবস্থা যাতে পুরোনো ও আজকের সব কোড একসাথে ধরতে পারে
-        params = {'per_page': 10}
-        response = requests.get(url, headers=headers, params=params, timeout=2)
+        params = {'per_page': 50}
+        response = requests.get(url, headers=headers, params=params, timeout=4)
         
-        try:
-            result = response.json()
-        except:
+        if response.status_code != 200:
             return
-        
+            
+        result = response.json()
         messages = result.get("data", [])
         
         if messages:
-            # পুরোনো মেসেজগুলো আগে প্রসেস করার জন্য রিভার্স করা হলো, যাতে সিরিয়াল ঠিক থাকে
             messages.reverse()
-            
             last_saved_id = get_last_processed_id()
             new_last_id = last_saved_id
             
             for latest_item in messages:
                 msg_id = str(latest_item.get("id", latest_item.get("received_at", "")))
                 
-                # যদি আইডি সেভ করা না থাকে অথবা নতুন আইডি হয়, তবে সেন্ড করবে
-                if last_saved_id is None or msg_id > last_saved_id:
+                if last_saved_id is None or msg_id != last_saved_id:
                     raw_number = str(latest_item.get("number", ""))
                     msg_body = latest_item.get("message", "")
                     
@@ -188,27 +189,33 @@ def check_messages():
                     country_code, flag = get_country_code_and_flag(raw_number)
                     prefix = raw_number[:9] if len(raw_number) >= 9 else raw_number
                     
+                    # নাম্বার মাস্কিং করা (শেষ ৫টি ডিজিট রেখে বাকি অংশ * করা)
+                    masked_number = mask_number(raw_number)
+                    
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                     otp_code = otp_match.group(0) if otp_match else "N/A"
                     
                     formatted_msg = (
-                        f"{flag} **{country_code}** {service_emoji} `{raw_number}`\n\n"
+                        f"{flag} **{country_code}** {service_emoji} `{masked_number}`\n\n"
                         f"```{msg_body}```\n\n"
                         f"🛡️ **Prefix:** `{prefix}`"
                     )
                     
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
                     new_last_id = msg_id
-                    time.sleep(0.3) # মেসেজগুলোর মাঝে ছোট বিরতি যাতে টেলিগ্রাম ফ্লাড এরর না দেয়
+                    time.sleep(0.4)
             
-            if new_last_id != last_saved_id:
+            if new_last_id and new_last_id != last_saved_id:
                 save_last_processed_id(new_last_id)
             
     except Exception as e:
-        pass
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running and syncing old & new messages...")
+    print("Bot is running with masked numbers...")
+    if os.path.exists(LAST_ID_FILE):
+        os.remove(LAST_ID_FILE)
+        
     while True:
         check_messages()
-        time.sleep(0.1)
+        time.sleep(2)
