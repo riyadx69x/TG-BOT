@@ -164,7 +164,7 @@ def send_telegram_message(text, emoji, otp_code):
                 },
                 {
                     "text": "🌐 Number Bot",
-                    "url": "https://t.me/YourBotUsername"
+                    "url": "https://t.me/Worldfast_otpxbot"
                 }
             ]
         ]
