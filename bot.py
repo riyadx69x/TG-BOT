@@ -95,7 +95,7 @@ def get_service_info(item, message_text):
     elif "WHATSAPP" in s_upper:
         emoji = "💬"
     else:
-        emoji = "♻️"
+        emoji = ""
         
     return emoji, detected_name
 
@@ -222,18 +222,18 @@ def check_messages():
                     elif any(c in msg_body for c in "äöüß"):
                         lang_name = "German"
 
+                    # শুধু বক্সের অংশটুকু রাখা হয়েছে, নিচে মেসেজ বডি বাদ দেওয়া হয়েছে
                     formatted_msg = (
                         f"╭─────────────────╮\n"
                         f"│{flag} {service_name} |💬| `{masked_number}` | {lang_name} |\n"
                         f"│✨ Prefix: `{prefix}`\n"
-                        f"╰─────────────────╯\n\n"
-                        f"```{msg_body}```"
+                        f"╰─────────────────╯"
                     )
                     
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
                     sent_ids.add(msg_id)
                     new_sent = True
-                    time.sleep(0.3)
+                    time.sleep(0.1)
             
             if new_sent:
                 with open("sent_messages.json", "w") as f:
@@ -243,8 +243,8 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running with Error mask format...")
+    print("Bot is running fast without body text...")
     while True:
         check_messages()
         check_pending_deletions()
-        time.sleep(1)
+        time.sleep(0.3)
