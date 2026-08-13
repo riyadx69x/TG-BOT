@@ -17,11 +17,6 @@ headers = {
 
 LAST_ID_FILE = "last_id.txt"
 
-def mask_number(number):
-    if len(number) > 5:
-        return '*' * (len(number) - 5) + number[-5:]
-    return number
-
 def get_country_code_and_flag(number):
     country_data = {
         "93": ("AF", "🇦🇫"), "355": ("AL", "🇦🇱"), "213": ("DZ", "🇩🇿"), "376": ("AD", "🇦🇩"), "244": ("AO", "🇦🇴"),
@@ -32,7 +27,7 @@ def get_country_code_and_flag(number):
         "855": ("KH", "🇰🇭"), "237": ("CM", "🇨🇲"), "1": ("US", "🇺🇸"), "238": ("CV", "🇨🇻"), "236": ("CF", "🇨🇫"),
         "235": ("TD", "🇹🇩"), "56": ("CL", "🇨🇱"), "86": ("CN", "🇨🇳"), "57": ("CO", "🇨🇴"), "269": ("KM", "🇰🇲"),
         "242": ("CG", "🇨🇬"), "243": ("CD", "🇨🇩"), "506": ("CR", "🇨🇷"), "385": ("HR", "🇭🇷"), "53": ("CU", "🇨🇺"),
-        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇩🇲"),
+        "357": ("CY", "🇨🇾"), "420": ("CZ", "🇨🇿"), "45": ("DK", "🇩🇰"), "253": ("DJ", "🇩🇯"), "1767": ("DM", "🇨🇲"),
         "1809": ("DO", "🇩🇴"), "593": ("EC", "🇪🇨"), "20": ("EG", "🇪🇬"), "503": ("SV", "🇸🇻"), "240": ("GQ", "🇬🇶"),
         "291": ("ER", "🇪🇷"), "372": ("EE", "🇪🇪"), "251": ("ET", "🇪🇹"), "679": ("FJ", "🇫🇯"), "358": ("FI", "🇫🇮"),
         "33": ("FR", "🇫🇷"), "241": ("GA", "🇬🇦"), "220": ("GM", "🇬🇲"), "995": ("GE", "🇬🇪"), "49": ("DE", "🇩🇪"),
@@ -62,8 +57,27 @@ def get_country_code_and_flag(number):
     
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
-            return country_data[prefix_code]
-    return "GEN", "🌐"
+            return prefix_code, country_data[prefix_code][0], country_data[prefix_code][1]
+    return "", "GEN", "🌐"
+
+def mask_number_middle(number):
+    # কান্ট্রি কোড বের করে নেওয়া
+    matched_prefix = ""
+    for prefix_code in sorted(get_country_code_and_flag.__globals__.get('country_data', {}).keys(), key=len, reverse=True):
+        if number.startswith(prefix_code):
+            matched_prefix = prefix_code
+            break
+    
+    if not matched_prefix:
+        matched_prefix = number[:3] if len(number) >= 3 else number
+
+    # কান্ট্রি কোড এবং শেষের ৫টি ডিজিট বাদ দিয়ে মাঝখানের অংশে ***** বসানো
+    remaining_part = number[len(matched_prefix):]
+    if len(remaining_part) > 5:
+        masked_middle = '*****'
+        last_five = remaining_part[-5:]
+        return matched_prefix + masked_middle + last_five
+    return number
 
 def get_service_info(item, message_text):
     detected_name = ""
@@ -151,7 +165,6 @@ def send_telegram_message(text, emoji, otp_code):
     except Exception as e:
         print(f"Telegram Error: {e}")
 
-# প্রথমবার চালুর সময় পুরোনো সব মেসেজ পাঠানোর জন্য ট্র্যাকিং ফাইলটি নিশ্চিত ফাঁকা রাখা হলো
 if os.path.exists(LAST_ID_FILE):
     os.remove(LAST_ID_FILE)
 
@@ -167,7 +180,6 @@ def check_messages():
         messages = result.get("data", [])
         
         if messages:
-            # প্যানেলের পুরোনো মেসেজগুলো আগে পাঠানোর জন্য রিভার্স করা হলো
             messages.reverse()
             
             sent_ids = set()
@@ -187,10 +199,10 @@ def check_messages():
                     msg_body = latest_item.get("message", "")
                     
                     service_name, service_emoji = get_service_info(latest_item, msg_body)
-                    country_code, flag = get_country_code_and_flag(raw_number)
+                    _, country_code, flag = get_country_code_and_flag(raw_number)
                     prefix = raw_number[:9] if len(raw_number) >= 9 else raw_number
                     
-                    masked_number = mask_number(raw_number)
+                    masked_number = mask_number_middle(raw_number)
                     
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                     otp_code = otp_match.group(0) if otp_match else "N/A"
@@ -214,7 +226,7 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running and syncing all old & new messages...")
+    print("Bot is running with middle masked numbers...")
     while True:
         check_messages()
         time.sleep(3)
