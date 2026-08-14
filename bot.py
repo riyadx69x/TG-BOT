@@ -4,7 +4,7 @@ import os
 import json
 import time
 
-api_key = 'sk_live_1x7jN6OUqTIzUNEv7MIM9Er2h5GphCXer9ef4BUx'
+api_key = 'sk_live_Arb2htUhOIClSJVbPCj9N1kunpnfkOIB1sk1vMz1'
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
@@ -124,7 +124,7 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        response = requests.post(tg_url, json=payload, timeout=10)
+        response = requests.post(tg_url, json=payload, timeout=3)
         res_data = response.json()
         if res_data.get("ok"):
             message_id = res_data["result"]["message_id"]
@@ -162,7 +162,7 @@ def check_pending_deletions():
         if current_time >= item["delete_at"]:
             del_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteMessage"
             try:
-                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=10)
+                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=3)
             except Exception as e:
                 print(f"Delete Error: {e}")
         else:
@@ -177,7 +177,7 @@ if os.path.exists(LAST_ID_FILE):
 def check_messages():
     try:
         params = {'per_page': 50}
-        response = requests.get(url, headers=headers, params=params, timeout=20)
+        response = requests.get(url, headers=headers, params=params, timeout=5)
         
         if response.status_code != 200:
             return
