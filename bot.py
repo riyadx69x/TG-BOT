@@ -124,7 +124,7 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        response = requests.post(tg_url, json=payload, timeout=3)
+        response = requests.post(tg_url, json=payload, timeout=10)
         res_data = response.json()
         if res_data.get("ok"):
             message_id = res_data["result"]["message_id"]
@@ -162,7 +162,7 @@ def check_pending_deletions():
         if current_time >= item["delete_at"]:
             del_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteMessage"
             try:
-                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=3)
+                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=10)
             except Exception as e:
                 print(f"Delete Error: {e}")
         else:
@@ -177,7 +177,7 @@ if os.path.exists(LAST_ID_FILE):
 def check_messages():
     try:
         params = {'per_page': 50}
-        response = requests.get(url, headers=headers, params=params, timeout=5)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         
         if response.status_code != 200:
             return
@@ -231,7 +231,7 @@ def check_messages():
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
                     sent_ids.add(msg_id)
                     new_sent = True
-                    time.sleep(0.05)
+                    time.sleep(0.01)
             
             if new_sent:
                 with open("sent_messages.json", "w") as f:
