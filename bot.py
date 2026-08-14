@@ -162,7 +162,7 @@ def check_pending_deletions():
         if current_time >= item["delete_at"]:
             del_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteMessage"
             try:
-                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=3)
+                requests.post(del_url, json={"chat_id": CHAT_ID, "message_id": item["message_id"]}, timeout=10)
             except Exception as e:
                 print(f"Delete Error: {e}")
         else:
