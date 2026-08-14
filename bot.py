@@ -124,7 +124,7 @@ def send_telegram_message(text, emoji, otp_code):
         "reply_markup": json.dumps(inline_keyboard)
     }
     try:
-        response = requests.post(tg_url, json=payload, timeout=3)
+        response = requests.post(tg_url, json=payload, timeout=10)
         res_data = response.json()
         if res_data.get("ok"):
             message_id = res_data["result"]["message_id"]
