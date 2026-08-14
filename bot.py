@@ -4,7 +4,7 @@ import os
 import json
 import time
 
-api_key = 'sk_live_Arb2htUhOIClSJVbPCj9N1kunpnfkOIB1sk1vMz1'
+api_key = 'sk_live_fllVCpfdJY77PBCUQAgZ1paidWEiQZf1bTE8fWsF'
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
