@@ -49,7 +49,7 @@ def get_country_code_and_flag(number):
         "421": ("SK", "🇸🇰"), "386": ("SI", "🇸🇮"), "252": ("SO", "🇸🇴"), "27": ("ZA", "🇿🇦"), "82": ("KR", "🇰🇷"),
         "34": ("ES", "🇪🇸"), "94": ("LK", "🇱🇰"), "249": ("SD", "🇸🇩"), "597": ("SR", "🇸🇷"), "46": ("SE", "🇸🇪"),
         "41": ("CH", "🇨🇭"), "963": ("SY", "🇸🇾"), "886": ("TW", "🇹🇼"), "992": ("TJ", "🇹🇯"), "255": ("TZ", "🇹🇿"),
-        "66": ("TH", "🇹🇭"), "228": ("TG", "🇹🇬"), "676": ("TO", "🇹🇴"), "216": ("TN", "🇹🇳"), "90": ("TR", "🇹🇷"),
+        "66": ("TH", "🇹🇭"), "228": ("TG", "TG"), "676": ("TO", "🇹🇴"), "216": ("TN", "🇹🇳"), "90": ("TR", "🇹🇷"),
         "993": ("TM", "🇹🇲"), "256": ("UG", "🇺🇬"), "380": ("UA", "🇺🇦"), "971": ("AE", "🇦🇪"), "44": ("GB", "🇬🇧"),
         "598": ("UY", "🇺🇾"), "998": ("UZ", "🇺🇿"), "58": ("VE", "🇻🇪"), "84": ("VN", "🇻🇳"), "967": ("YE", "🇾🇪"),
         "260": ("ZM", "🇿🇲"), "263": ("ZW", "🇿🇼")
@@ -176,7 +176,7 @@ if os.path.exists(LAST_ID_FILE):
 
 def check_messages():
     try:
-        params = {'per_page': 100}
+        params = {'per_page': 50}
         response = requests.get(url, headers=headers, params=params, timeout=5)
         
         if response.status_code != 200:
@@ -205,7 +205,7 @@ def check_messages():
                     msg_body = latest_item.get("message", "")
                     
                     service_emoji, service_name = get_service_info(latest_item, msg_body)
-                    country_code, flag = get_country_code_and_flag(raw_number)
+                    country_short, flag = get_country_code_and_flag(raw_number)
                     prefix = raw_number[:9] if len(raw_number) >= 9 else raw_number
                     
                     masked_number = mask_phone_number(raw_number)
@@ -222,10 +222,10 @@ def check_messages():
                     elif any(c in msg_body for c in "äöüß"):
                         lang_name = "German"
 
-                    # শুধু বক্সের অংশটুকু রাখা হয়েছে, নিচে মেসেজ বডি বাদ দেওয়া হয়েছে
+                    # দেশের শর্ট নেম সঠিকভাবে এক লাইনে যুক্ত করা হলো
                     formatted_msg = (
                         f"╭─────────────────╮\n"
-                        f"│{flag} {service_name} |💬| `{masked_number}` | {lang_name} |\n"
+                        f"│{flag} {service_name} | {country_short} | `{masked_number}` | {lang_name} |\n"
                         f"│✨ Prefix: `{prefix}`\n"
                         f"╰─────────────────╯"
                     )
@@ -233,7 +233,7 @@ def check_messages():
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
                     sent_ids.add(msg_id)
                     new_sent = True
-                    time.sleep(0.1)
+                    time.sleep(0.05)
             
             if new_sent:
                 with open("sent_messages.json", "w") as f:
@@ -243,8 +243,8 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running fast without body text...")
+    print("Bot is running smoothly and fast...")
     while True:
         check_messages()
         check_pending_deletions()
-        time.sleep(0.3)
+        time.sleep(1)
