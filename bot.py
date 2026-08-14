@@ -245,4 +245,4 @@ if __name__ == "__main__":
     while True:
         check_messages()
         check_pending_deletions()
-        time.sleep(0.01)
+        time.sleep(0.1)
