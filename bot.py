@@ -177,7 +177,7 @@ if os.path.exists(LAST_ID_FILE):
 def check_messages():
     try:
         params = {'per_page': 50}
-        response = requests.get(url, headers=headers, params=params, timeout=5)
+        response = requests.get(url, headers=headers, params=params, timeout=20)
         
         if response.status_code != 200:
             return
