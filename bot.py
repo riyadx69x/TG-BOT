@@ -243,8 +243,7 @@ def check_messages():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("Bot is running smoothly and fast...")
+    print("Bot is running in Turbo Mode...")
     while True:
         check_messages()
         check_pending_deletions()
-        time.sleep(1)
