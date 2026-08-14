@@ -213,7 +213,6 @@ def check_messages():
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                     otp_code = otp_match.group(0) if otp_match else "N/A"
                     
-                    # Language detection
                     lang_name = "English"
                     if any(c in msg_body for c in "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯабвгдежзиклмнопрстуфхцчшщэюя"):
                         lang_name = "Russian"
@@ -222,7 +221,6 @@ def check_messages():
                     elif any(c in msg_body for c in "äöüß"):
                         lang_name = "German"
 
-                    # দেশের শর্ট নেম সঠিকভাবে এক লাইনে যুক্ত করা হলো
                     formatted_msg = (
                         f"╭─────────────────╮\n"
                         f"│{flag} {service_name} | {country_short} | `{masked_number}` | {lang_name} |\n"
