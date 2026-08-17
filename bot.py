@@ -1,10 +1,7 @@
-আপনার চাহিদা অনুযায়ী কোডের ডিজাইন, হেডার বক্স, ল্যাঙ্গুয়েজ ডিটেকশন এবং ইনফরমেশন ফরম্যাট পুরোপুরি আপডেট করে দেওয়া হয়েছে।
-নিচের সম্পূর্ণ আপডেট করা কোডটি আপনার bot.py ফাইলে আগের কোডের বদলে বসিয়ে দিন:
-import requests
+importt requests
 import re
 import os
-import json
-import time
+import jsonimportt time
 
 api_key = 'sk_live_fllVCpfdJY77PBCUQAgZ1paidWEiQZf1bTE8fWsF'
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
