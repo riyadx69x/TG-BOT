@@ -58,7 +58,7 @@ def get_country_code_and_flag(number):
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
             return country_data[prefix_code]
-    return "GEN", "🌐"
+    return "ER", "🌐"
 
 def mask_phone_number(number):
     if len(number) > 8:
@@ -130,7 +130,7 @@ def send_telegram_message(text, emoji, otp_code):
                     "copy_text": {"text": otp_code}
                 },
                 {
-                    "text": "🚀 Number Bot",
+                    "text": "📱 Number Bot",
                     "url": "https://t.me/Worldfast_otpxbot"
                 }
             ]
@@ -240,7 +240,7 @@ def check_messages():
                         f"╭───────────────────────────────────╮\n"
                         f"│  {flag}  `{country_short}`  {service_emoji}  `{masked_number}`\n"
                         f"│  {lang_name}\n"
-                        f"│  🌐 Prefix: `{prefix}`\n"
+                        f"│  ♻️ Prefix: `{prefix}`\n"
                         f"╰───────────────────────────────────╯"
                     )
                     
