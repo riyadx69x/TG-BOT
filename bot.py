@@ -236,7 +236,7 @@ def check_messages():
                     lang_name = detect_language(msg_body)
 
                     formatted_msg = (
-                        f"EARN MASTER\n"
+                        f"Unknown\n"
                         f"╭───────────────────────────────────╮\n"
                         f"│  {flag}  `{country_short}`  {service_emoji}  `{masked_number}`\n"
                         f"│  {lang_name}\n"
