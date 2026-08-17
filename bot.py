@@ -58,14 +58,14 @@ def get_country_code_and_flag(number):
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
             return country_data[prefix_code]
-    return "EN", "🌐"
+    return "GEN", "🌐"
 
 def mask_phone_number(number):
     if len(number) > 8:
         return number[:6] + "KUP" + number[-4:]
     return number
 
-def getServiceInfo(item, message_text):
+def get_service_info(item, message_text):
     detected_name = ""
     for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
         if key in item and item[key]:
