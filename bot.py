@@ -1,3 +1,5 @@
+আপনার চাহিদা অনুযায়ী কোডের ডিজাইন, হেডার বক্স, ল্যাঙ্গুয়েজ ডিটেকশন এবং ইনফরমেশন ফরম্যাট পুরোপুরি আপডেট করে দেওয়া হয়েছে।
+নিচের সম্পূর্ণ আপডেট করা কোডটি আপনার bot.py ফাইলে আগের কোডের বদলে বসিয়ে দিন:
 import requests
 import re
 import os
@@ -58,7 +60,7 @@ def get_country_code_and_flag(number):
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
             return country_data[prefix_code]
-    return "GEN", "🌐"
+    return "GN", "🌐"
 
 def mask_phone_number(number):
     if len(number) > 6:
@@ -93,11 +95,29 @@ def get_service_info(item, message_text):
     if "TELEGRAM" in s_upper:
         emoji = "📱"
     elif "WHATSAPP" in s_upper:
-        emoji = "💬"
-    else:
         emoji = ""
+    else:
+        emoji = "✨"
         
     return emoji, detected_name
+
+def detect_language(message_text):
+    text_lower = message_text.lower()
+    if any(c in message_text for c in "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯабвгдежзиклмнопрстуфхцчшщэюя"):
+        return "Russian"
+    elif any(c in message_text for c in "ñáéíóú¿¡"):
+        return "Spanish"
+    elif any(c in message_text for c in "äöüß"):
+        return "German"
+    elif any(c in text_lower for c in ["code", "is", "your", "verification", "otp", "login"]):
+        return "English"
+    elif any(c in message_text for c in "أبتثجحخدذرزسشصضطظعغفقكلمنهوي"):
+        return "Arabic"
+    elif any(c in message_text for c in "çğİıöşü"):
+        return "Turkish"
+    elif any(c in message_text for c in "àâäéèêëîïôöùûüç"):
+        return "French"
+    return "English"
 
 def send_telegram_message(text, emoji, otp_code):
     tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -213,13 +233,7 @@ def check_messages():
                     otp_match = re.search(r'\b\d{3}[-\s]?\d{3}\b|\b\d{4,6}\b', msg_body)
                     otp_code = otp_match.group(0) if otp_match else "N/A"
                     
-                    lang_name = "English"
-                    if any(c in msg_body for c in "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯабвгдежзиклмнопрстуфхцчшщэюя"):
-                        lang_name = "Russian"
-                    elif any(c in msg_body for c in "ñáéíóú¿¡"):
-                        lang_name = "Spanish"
-                    elif any(c in msg_body for c in "äöüß"):
-                        lang_name = "German"
+                    lang_name = detect_language(msg_body)
 
                     formatted_msg = (
                         f"╭─────────────────╮\n"
@@ -246,3 +260,4 @@ if __name__ == "__main__":
         check_messages()
         check_pending_deletions()
         time.sleep(0.1)
+
