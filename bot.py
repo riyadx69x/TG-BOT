@@ -1,7 +1,8 @@
-importt requests
+import requests
 import re
 import os
-import jsonimportt time
+import json
+import time
 
 api_key = 'sk_live_fllVCpfdJY77PBCUQAgZ1paidWEiQZf1bTE8fWsF'
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
@@ -57,14 +58,14 @@ def get_country_code_and_flag(number):
     for prefix_code in sorted(country_data.keys(), key=len, reverse=True):
         if number.startswith(prefix_code):
             return country_data[prefix_code]
-    return "GN", "🌐"
+    return "EN", "🌐"
 
 def mask_phone_number(number):
-    if len(number) > 6:
-        return number[:3] + "Error" + number[6:]
+    if len(number) > 8:
+        return number[:6] + "KUP" + number[-4:]
     return number
 
-def get_service_info(item, message_text):
+def getServiceInfo(item, message_text):
     detected_name = ""
     for key in ['service', 'app', 'service_name', 'name', 'title', 'gateway']:
         if key in item and item[key]:
@@ -75,7 +76,9 @@ def get_service_info(item, message_text):
                 
     if not detected_name:
         text_upper = message_text.upper()
-        if "TELEGRAM" in text_upper:
+        if "SNAPCHAT" in text_upper:
+            detected_name = "Snapchat"
+        elif "TELEGRAM" in text_upper:
             detected_name = "Telegram"
         elif "WHATSAPP" in text_upper:
             detected_name = "WhatsApp"
@@ -83,16 +86,16 @@ def get_service_info(item, message_text):
             detected_name = "1xBet"
         elif "GOOGLE" in text_upper:
             detected_name = "Google"
-        elif "FACEBOOK" in text_upper:
-            detected_name = "Facebook"
         else:
             detected_name = "OTP"
 
     s_upper = detected_name.upper()
-    if "TELEGRAM" in s_upper:
+    if "SNAPCHAT" in s_upper:
+        emoji = "👻"
+    elif "TELEGRAM" in s_upper:
         emoji = "📱"
     elif "WHATSAPP" in s_upper:
-        emoji = ""
+        emoji = "💬"
     else:
         emoji = "✨"
         
@@ -106,14 +109,14 @@ def detect_language(message_text):
         return "Spanish"
     elif any(c in message_text for c in "äöüß"):
         return "German"
-    elif any(c in text_lower for c in ["code", "is", "your", "verification", "otp", "login"]):
-        return "English"
+    elif any(c in message_text for c in "àâäéèêëîïôöùûüç"):
+        return "French"
     elif any(c in message_text for c in "أبتثجحخدذرزسشصضطظعغفقكلمنهوي"):
         return "Arabic"
     elif any(c in message_text for c in "çğİıöşü"):
         return "Turkish"
-    elif any(c in message_text for c in "àâäéèêëîïôöùûüç"):
-        return "French"
+    elif any(c in text_lower for c in ["code", "is", "your", "verification", "otp", "login"]):
+        return "English"
     return "English"
 
 def send_telegram_message(text, emoji, otp_code):
@@ -127,7 +130,7 @@ def send_telegram_message(text, emoji, otp_code):
                     "copy_text": {"text": otp_code}
                 },
                 {
-                    "text": " Number Bot ",
+                    "text": "🚀 Number Bot",
                     "url": "https://t.me/Worldfast_otpxbot"
                 }
             ]
@@ -233,10 +236,12 @@ def check_messages():
                     lang_name = detect_language(msg_body)
 
                     formatted_msg = (
-                        f"╭─────────────────╮\n"
-                        f"│{flag} {service_name} | {country_short} | `{masked_number}` | {lang_name} |\n"
-                        f"│✨ Prefix: `{prefix}`\n"
-                        f"╰─────────────────╯"
+                        f"EARN MASTER\n"
+                        f"╭───────────────────────────────────╮\n"
+                        f"│  {flag}  `{country_short}`  {service_emoji}  `{masked_number}`\n"
+                        f"│  {lang_name}\n"
+                        f"│  🌐 Prefix: `{prefix}`\n"
+                        f"╰───────────────────────────────────╯"
                     )
                     
                     send_telegram_message(formatted_msg, service_emoji, otp_code)
@@ -257,4 +262,3 @@ if __name__ == "__main__":
         check_messages()
         check_pending_deletions()
         time.sleep(0.1)
-
