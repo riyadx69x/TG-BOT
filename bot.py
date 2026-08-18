@@ -49,7 +49,7 @@ def get_country_code_and_flag(number):
         "421": ("SK", "🇸🇰"), "386": ("SI", "🇸🇮"), "252": ("SO", "🇸🇴"), "27": ("ZA", "🇿🇦"), "82": ("KR", "🇰🇷"),
         "34": ("ES", "🇪🇸"), "94": ("LK", "🇱🇰"), "249": ("SD", "🇸🇩"), "597": ("SR", "🇸🇷"), "46": ("SE", "🇸🇪"),
         "41": ("CH", "🇨🇭"), "963": ("SY", "🇸🇾"), "886": ("TW", "🇹🇼"), "992": ("TJ", "🇹🇯"), "255": ("TZ", "🇹🇿"),
-        "66": ("TH", "🇹🇭"), "228": ("TG", "🇹🇬"), "676": ("TO", "🇹🇴"), "216": ("TN", "🇹🇳"), "90": ("TR", "🇹🇷"),
+        "66": ("TH", "🇹🇭"), "228": ("TG", "TG"), "676": ("TO", "🇹🇴"), "216": ("TN", "🇹🇳"), "90": ("TR", "🇹🇷"),
         "993": ("TM", "🇹🇲"), "256": ("UG", "🇺🇬"), "380": ("UA", "🇺🇦"), "971": ("AE", "🇦🇪"), "44": ("GB", "🇬🇧"),
         "598": ("UY", "🇺🇾"), "998": ("UZ", "🇺🇿"), "58": ("VE", "🇻🇪"), "84": ("VN", "🇻🇳"), "967": ("YE", "🇾🇪"),
         "260": ("ZM", "🇿🇲"), "263": ("ZW", "🇿🇼")
@@ -130,7 +130,7 @@ def send_telegram_message(text, emoji, otp_code):
                     "copy_text": {"text": otp_code}
                 },
                 {
-                    "text": " Number Bot",
+                    "text": "Number Bot",
                     "url": "https://t.me/Worldfast_otpxbot"
                 }
             ]
@@ -236,7 +236,7 @@ def check_messages():
                     lang_name = detect_language(msg_body)
 
                     formatted_msg = (
-                        f"{ UNKNOWN }\n"
+                        f"UNKNOWN\n"
                         f"╭───────────────────────────────────╮\n"
                         f"│  {flag}  `{country_short}`  {service_emoji}  `{masked_number}`\n"
                         f"│  {lang_name}\n"
